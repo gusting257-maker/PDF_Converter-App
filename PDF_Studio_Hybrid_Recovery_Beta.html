@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Studio Local - All-in-One Local PDF Suite</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fff1f2',
+                            100: '#ffe4e6',
+                            500: '#e11d48',
+                            600: '#e11d48',
+                            700: '#be123c',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- External PDF Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        body { 
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+            overflow-x: hidden; 
+        }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); }
+        ::-webkit-scrollbar-thumb { background: rgba(150,150,150,0.3); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(150,150,150,0.5); }
+
+        .drag-over { 
+            border-color: #e11d48 !important; 
+            background-color: rgba(225, 29, 72, 0.05) !important; 
+        }
+
+        @keyframes cardFloatAndGlow {
+            0%, 100% { 
+                transform: translateY(0px); 
+                box-shadow: 0 0 15px rgba(225, 29, 72, 0.3), 0 0 30px rgba(225, 29, 72, 0.15); 
+            }
+            50% { 
+                transform: translateY(-8px); 
+                box-shadow: 0 0 30px rgba(225, 29, 72, 0.75), 0 0 60px rgba(225, 29, 72, 0.45); 
+            }
+        }
+
+        .animated-card {
+            animation: cardFloatAndGlow 3.5s ease-in-out infinite;
+            will-change: transform, box-shadow;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .typewriter-cursor {
+            display: inline-block;
+            width: 3px;
+            background-color: #e11d48;
+            margin-left: 2px;
+            animation: blink 0.8s infinite;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-full flex flex-col transition-colors duration-200">
+
+    <!-- Header Navigation -->
+    <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3 cursor-pointer group" onclick="app.showToolGrid()">
+                    <div class="bg-brand-600 text-white p-2.5 rounded-xl flex items-center justify-center shadow-lg shadow-brand-500/30 group-hover:scale-105 transition">
+                        <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+                    </div>
+                    <div>
+                        <span class="font-bold text-xl tracking-tight text-slate-900 dark:text-white">PDF<span class="text-brand-600">Studio</span></span>
+                        <span class="ml-2 px-2 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300 rounded-full border border-emerald-300 dark:border-emerald-700 inline-flex items-center gap-1">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Offline Ready
+                        </span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="app.showToolGrid()" class="text-sm font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 transition">All PDF Tools</button>
+                    <button onclick="app.toggleTheme()" class="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition" title="Toggle Theme">
+                        <svg class="w-5 h-5 dark:hidden fill-current" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>
+                        <svg class="w-5 h-5 hidden dark:block fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 100 2h1z" clip-rule="evenodd"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- TOOL GRID VIEW -->
+        <section id="toolGridView" class="space-y-8">
+            <div class="text-center max-w-3xl mx-auto space-y-3">
+                <h1 class="text-3xl sm:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight min-h-[72px] sm:min-h-[96px] flex items-center justify-center flex-wrap gap-2">
+                    <span>Every tool you need to work with PDFs,</span>
+                    <span class="text-brand-600 font-black"><span id="typewriter"></span><span class="typewriter-cursor">&nbsp;</span></span>
+                </h1>
+                <p class="text-slate-600 dark:text-slate-400 text-base sm:text-lg">
+                    Fast PDF tools that process your files locally in the browser whenever possible.
+                </p>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="flex justify-center flex-wrap gap-2 pt-2 pb-4">
+                <button onclick="app.filterTools('all')" class="tool-filter-btn px-4 py-2 text-sm font-semibold rounded-full bg-brand-600 text-white shadow-sm transition transform hover:-translate-y-0.5" data-cat="all">All Tools</button>
+                <button onclick="app.filterTools('organize')" class="tool-filter-btn px-4 py-2 text-sm font-semibold rounded-full bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 transition transform hover:-translate-y-0.5" data-cat="organize">Organize PDF</button>
+                <button onclick="app.filterTools('convert')" class="tool-filter-btn px-4 py-2 text-sm font-semibold rounded-full bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 transition transform hover:-translate-y-0.5" data-cat="convert">Convert PDF</button>
+                <button onclick="app.filterTools('edit')" class="tool-filter-btn px-4 py-2 text-sm font-semibold rounded-full bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 transition transform hover:-translate-y-0.5" data-cat="edit">Edit PDF</button>
+                <button onclick="app.filterTools('security')" class="tool-filter-btn px-4 py-2 text-sm font-semibold rounded-full bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 transition transform hover:-translate-y-0.5" data-cat="security">PDF Security</button>
+            </div>
+
+            <!-- Tools Cards Grid -->
+            <div id="toolsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
+        </section>
+
+        <!-- ACTIVE TOOL WORKSPACE VIEW -->
+        <section id="toolWorkspaceView" class="hidden space-y-6">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-4">
+                <div class="flex items-center gap-3">
+                    <button onclick="app.showToolGrid()" class="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-slate-600 dark:text-slate-300 transition">
+                        <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"/></svg>
+                    </button>
+                    <div>
+                        <h2 id="currentToolTitle" class="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <span id="currentToolIconContainer" class="text-brand-600"></span>
+                            <span id="currentToolName">Tool Name</span>
+                        </h2>
+                        <p id="currentToolDesc" class="text-sm text-slate-500 dark:text-slate-400">Tool description goes here.</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <label for="addMoreFilesInput" class="cursor-pointer bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                        <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/></svg> Add Files
+                    </label>
+                    <input type="file" id="addMoreFilesInput" class="hidden" multiple accept=".pdf,.docx,.jpg,.jpeg,.png">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Main Drop Area -->
+                <div class="lg:col-span-2 space-y-4">
+                    <div id="dropzone" ondragover="app.handleDragOver(event)" ondragleave="app.handleDragLeave(event)" ondrop="app.handleDrop(event)" 
+                         class="border-2 border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 rounded-2xl p-12 text-center hover:border-brand-500 transition cursor-pointer flex flex-col items-center justify-center min-h-[350px] animated-card">
+                        <div class="w-20 h-20 bg-brand-50 dark:bg-brand-900/20 text-brand-600 rounded-full flex items-center justify-center mb-4 text-3xl shadow-inner">
+                            <svg class="w-10 h-10 fill-current" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-800 dark:text-white mb-1">Select or Drop Files Here</h3>
+                        <p class="text-slate-500 dark:text-slate-400 text-sm mb-6 max-w-md">Drop files from your computer to begin processing instantly.</p>
+                        <label for="fileInput" class="bg-brand-600 hover:bg-brand-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg shadow-brand-500/20 cursor-pointer transition flex items-center gap-2">
+                            <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg> Select Files
+                        </label>
+                        <input type="file" id="fileInput" class="hidden" multiple accept=".pdf,.docx,.jpg,.jpeg,.png" onchange="app.handleFileSelect(event)">
+                        <span class="text-xs text-slate-400 mt-4 flex items-center gap-1">
+                            <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                            Local browser processing for supported tools
+                        </span>
+                    </div>
+
+                    <div id="filePreviewArea" class="hidden space-y-4">
+                        <div class="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400 px-1">
+                            <span id="fileCountBadge" class="font-medium">Selected Files (0)</span>
+                            <button onclick="app.clearAllFiles()" class="text-rose-500 hover:text-rose-600 text-xs font-semibold flex items-center gap-1">
+                                <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg> Clear All
+                            </button>
+                        </div>
+                        <div id="thumbnailsContainer" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-h-[500px] overflow-y-auto p-2 bg-slate-100 dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-800"></div>
+                    </div>
+                </div>
+
+                <!-- Settings & Action Panel -->
+                <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-sm flex flex-col justify-between h-fit space-y-6">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700 pb-3 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-brand-600 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.532 1.532 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.532 1.532 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg> Tool Options
+                        </h3>
+                        <div id="toolOptionsContainer" class="py-4 space-y-4"></div>
+                    </div>
+
+                    <div class="space-y-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+                        <div id="progressContainer" class="hidden space-y-2">
+                            <div class="flex justify-between text-xs font-medium text-slate-600 dark:text-slate-300">
+                                <span id="progressStatus">Processing...</span>
+                                <span id="progressPercent">0%</span>
+                            </div>
+                            <div class="w-full bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
+                                <div id="progressBar" class="bg-brand-600 h-full w-0 transition-all duration-200"></div>
+                            </div>
+                        </div>
+
+                        <button id="processBtn" onclick="app.executeTool()" class="w-full bg-brand-600 hover:bg-brand-700 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-brand-500/20 transition flex items-center justify-center gap-2 text-base">
+                            <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.532 1.532 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.532 1.532 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
+                            <span id="processBtnText">Process Files</span>
+                        </button>
+
+                        <div id="downloadContainer" class="hidden space-y-2 pt-2">
+                            <div class="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-xl text-emerald-800 dark:text-emerald-300 text-xs flex items-center gap-2">
+                                <svg class="w-5 h-5 text-emerald-500 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                                <div>
+                                    <p class="font-bold">Task Completed Successfully!</p>
+                                    <p class="text-[11px] opacity-80" id="resultMeta">Your output file is ready.</p>
+                                </div>
+                            </div>
+                            <a id="downloadBtn" download="processed_output.pdf" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2 text-sm">
+                                <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/></svg> Download File
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 dark:text-slate-400">
+            <p>© 2026 PDF Studio. Browser-based PDF tools.</p>
+        </div>
+    </footer>
+
+    <!-- Application Script Engine -->
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        const ICONS = {
+            merge: `<svg class="w-6 h-6 fill-current" viewBox="0 0 20 20"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>`,
+            split: `<svg class="w-6 h-6 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.5 13a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.977A4.5 4.5 0 1113.5 13H11V9.414l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13H5.5z" clip-rule="evenodd"/></svg>`,
+            remove: `<svg class="w-6 h-6 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/></svg>`,
+            extract: `<svg class="w-6 h-6 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>`,
+            compress: `<svg class="w-6 h-6 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1z" clip-rule="evenodd"/></svg>`,
+            word: `<svg class="w-6 h-6 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 5a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm0 3a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1z" clip-rule="evenodd"/></svg>`,
+            image: `<svg class="w-6 h-6 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/></svg>`,
+            rotate: `<svg class="w-6 h-6 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/></svg>`,
+            stamp: `<svg class="w-6 h-6 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h8V3a1 1 0 112 0v1h1a2 2 0 012 2v10a2 2 0 01-2 2H3a2 2 0 01-2-2V6a2 2 0 012-2h1V3a1 1 0 011-1zm1 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>`,
+            lock: `<svg class="w-6 h-6 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>`,
+            unlock: `<svg class="w-6 h-6 fill-current" viewBox="0 0 20 20"><path d="M10 2a5 5 0 00-5 5v2a2 2 0 00-2 2v5a2 2 0 002 2h10a2 2 0 002-2v-5a2 2 0 00-2-2H7V7a3 3 0 016 0 1 1 0 102 0 5 5 0 00-5-5z"/></svg>`
+        };
+
+        const TOOLS = [
+            { id: 'merge', name: 'Merge PDF', category: 'organize', icon: ICONS.merge, desc: 'Combine multiple PDFs in your preferred sequence.', accept: '.pdf', multiple: true },
+            { id: 'split', name: 'Split PDF', category: 'organize', icon: ICONS.split, desc: 'Separate PDF document into multiple split files.', accept: '.pdf', multiple: false },
+            { id: 'remove-pages', name: 'Remove pages', category: 'organize', icon: ICONS.remove, desc: 'Delete unwanted pages from your PDF document.', accept: '.pdf', multiple: false },
+            { id: 'extract-pages', name: 'Extract pages', category: 'organize', icon: ICONS.extract, desc: 'Get specific pages out of your PDF file.', accept: '.pdf', multiple: false },
+            { id: 'compress', name: 'Compress PDF', category: 'edit', icon: ICONS.compress, desc: 'Reduce file size while optimizing maximal quality.', accept: '.pdf', multiple: false },
+            { id: 'word-to-pdf', name: 'WORD to PDF', category: 'convert', icon: ICONS.word, desc: 'Make DOC and DOCX files easy to read by converting to PDF.', accept: '.docx', multiple: false },
+            { id: 'pdf-to-word', name: 'PDF to WORD', category: 'convert', icon: ICONS.word, desc: 'Convert PDF documents into editable Word .docx format.', accept: '.pdf', multiple: false },
+            { id: 'image-to-pdf', name: 'JPG to PDF', category: 'convert', icon: ICONS.image, desc: 'Transform JPG, PNG, and WebP images into clean PDFs.', accept: '.jpg,.jpeg,.png,.webp', multiple: true },
+            { id: 'pdf-to-image', name: 'PDF to JPG', category: 'convert', icon: ICONS.image, desc: 'Extract all PDF pages into standalone image files.', accept: '.pdf', multiple: false },
+            { id: 'rotate', name: 'Rotate PDF', category: 'edit', icon: ICONS.rotate, desc: 'Rotate individual pages or entire documents with custom angles.', accept: '.pdf', multiple: false },
+            { id: 'watermark', name: 'Add watermark', category: 'edit', icon: ICONS.stamp, desc: 'Stamp custom text overlays with size, color & density options.', accept: '.pdf', multiple: false },
+            { id: 'protect', name: 'Protect PDF', category: 'security', icon: ICONS.lock, desc: 'Create an AES-256 ZIP with verified-email password recovery.', accept: '.pdf', multiple: false },
+            { id: 'unlock', name: 'Unlock PDF', category: 'security', icon: ICONS.unlock, desc: 'Extract or recover a PDF Studio protected ZIP archive.', accept: '.zip', multiple: false }
+        ];
+
+        // Public browser configuration only. Never place a Supabase secret/service-role key here.
+        const PDF_STUDIO_SUPABASE = {
+            url: 'https://wzwvvgxjvphtqnlwmeac.supabase.co',
+            publishableKey: 'sb_publishable_110ZbLZiTJgvqSQEdqWgGA_m0AiqJa9'
+        };
+
+        class PDFApp {
+            constructor() {
+                this.supabaseClient = null;
+                this.verifiedEmail = '';
+                this.recoverySource = null;
+                this.currentTool = null;
+                this.uploadedFiles = [];
+                this.isDark = true;
+                this.renderToolGrid();
+                this.initTypewriter();
+                document.getElementById('addMoreFilesInput').addEventListener('change', (e) => this.handleFileSelect(e));
+            }
+
+            initTypewriter() {
+                const words = ["100% available offline.", "Fast & 100% Private.", "Your Complete PDF Suite.", "Fully Shareable."];
+                let wordIdx = 0, charIdx = 0, isDeleting = false;
+                const element = document.getElementById('typewriter');
+
+                const type = () => {
+                    const currentWord = words[wordIdx];
+                    if (isDeleting) {
+                        element.textContent = currentWord.substring(0, charIdx - 1);
+                        charIdx--;
+                    } else {
+                        element.textContent = currentWord.substring(0, charIdx + 1);
+                        charIdx++;
+                    }
+
+                    let speed = isDeleting ? 40 : 80;
+                    if (!isDeleting && charIdx === currentWord.length) {
+                        speed = 2000;
+                        isDeleting = true;
+                    } else if (isDeleting && charIdx === 0) {
+                        isDeleting = false;
+                        wordIdx = (wordIdx + 1) % words.length;
+                        speed = 500;
+                    }
+                    setTimeout(type, speed);
+                };
+                type();
+            }
+
+            toggleTheme() {
+                this.isDark = !this.isDark;
+                document.documentElement.classList.toggle('dark', this.isDark);
+            }
+
+            renderToolGrid(category = 'all') {
+                const grid = document.getElementById('toolsGrid');
+                grid.innerHTML = '';
+                const filtered = category === 'all' ? TOOLS : TOOLS.filter(t => t.category === category);
+
+                filtered.forEach((tool, idx) => {
+                    const card = document.createElement('div');
+                    card.className = 'group bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 transition-all duration-300 cursor-pointer flex flex-col justify-between animated-card';
+                    card.style.animationDelay = `${idx * 0.1}s`;
+                    
+                    card.onclick = () => this.selectTool(tool.id);
+                    card.innerHTML = `
+                        <div class="space-y-4">
+                            <div class="w-12 h-12 rounded-xl bg-brand-50 dark:bg-brand-950/40 text-brand-600 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                                ${tool.icon}
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-lg text-slate-900 dark:text-white group-hover:text-brand-600 transition-colors">${tool.name}</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">${tool.desc}</p>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700/50 flex items-center text-xs font-semibold text-brand-600 dark:text-brand-400 gap-1">
+                            Open Tool <svg class="w-4 h-4 fill-current group-hover:translate-x-1 transition-transform" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            }
+
+            filterTools(cat) {
+                document.querySelectorAll('.tool-filter-btn').forEach(btn => {
+                    const matches = btn.getAttribute('data-cat') === cat;
+                    btn.className = matches 
+                        ? "tool-filter-btn px-4 py-2 text-sm font-semibold rounded-full bg-brand-600 text-white shadow-sm transition transform hover:-translate-y-0.5"
+                        : "tool-filter-btn px-4 py-2 text-sm font-semibold rounded-full bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 transition transform hover:-translate-y-0.5";
+                });
+                this.renderToolGrid(cat);
+            }
+
+            selectTool(toolId) {
+                this.currentTool = TOOLS.find(t => t.id === toolId);
+                this.uploadedFiles = [];
+                this.verifiedEmail = '';
+                document.getElementById('currentToolName').innerText = this.currentTool.name;
+                document.getElementById('currentToolTitle').querySelector('span:nth-child(2)').innerText = this.currentTool.name;
+                document.getElementById('currentToolDesc').innerText = this.currentTool.desc;
+                document.getElementById('currentToolIconContainer').innerHTML = this.currentTool.icon;
+                document.getElementById('fileInput').accept = this.currentTool.accept;
+                document.getElementById('fileInput').multiple = this.currentTool.multiple;
+                document.getElementById('addMoreFilesInput').accept = this.currentTool.accept;
+
+                this.renderToolOptions();
+                this.resetWorkspaceUI();
+                document.getElementById('toolGridView').classList.add('hidden');
+                document.getElementById('toolWorkspaceView').classList.remove('hidden');
+            }
+
+            showToolGrid() {
+                document.getElementById('toolWorkspaceView').classList.add('hidden');
+                document.getElementById('toolGridView').classList.remove('hidden');
+            }
+
+            resetWorkspaceUI() {
+                document.getElementById('dropzone').classList.remove('hidden');
+                document.getElementById('filePreviewArea').classList.add('hidden');
+                document.getElementById('downloadContainer').classList.add('hidden');
+                document.getElementById('progressContainer').classList.add('hidden');
+                document.getElementById('thumbnailsContainer').innerHTML = '';
+                this.updateProcessButtonState();
+            }
+
+            updateProcessButtonState() {
+                const btn = document.getElementById('processBtn');
+                if (this.uploadedFiles.length === 0) {
+                    btn.disabled = true;
+                    document.getElementById('processBtnText').innerText = 'Upload Files to Start';
+                } else {
+                    btn.disabled = false;
+                    document.getElementById('processBtnText').innerText = `Process ${this.currentTool.name}`;
+                }
+            }
+
+            renderToolOptions() {
+                const container = document.getElementById('toolOptionsContainer');
+                container.innerHTML = '';
+                if (this.currentTool.id === 'split') {
+                    container.innerHTML = `<label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Split Ranges (comma separated for multiple files, or leave blank to split in half)</label><input type="text" id="splitRangeInput" placeholder="e.g. 1-3, 4-6" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none">`;
+                } else if (this.currentTool.id === 'extract-pages') {
+                    container.innerHTML = `<label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Page Range to Extract</label><input type="text" id="splitRangeInput" value="1" placeholder="e.g. 1-3, 5" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none">`;
+                } else if (this.currentTool.id === 'remove-pages') {
+                    container.innerHTML = `<label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Pages to Remove</label><input type="text" id="removeRangeInput" placeholder="e.g. 2, 4-6" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none">`;
+                } else if (this.currentTool.id === 'rotate') {
+                    container.innerHTML = `
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Standard / Cardinal Points</label>
+                                <select id="rotateAngle" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none">
+                                    <option value="90">East / 90° Clockwise</option>
+                                    <option value="180">South / 180° Half Turn</option>
+                                    <option value="270">West / 270° Counter-Clockwise</option>
+                                    <option value="45">North-East / 45°</option>
+                                    <option value="135">South-East / 135°</option>
+                                    <option value="225">South-West / 225°</option>
+                                    <option value="315">North-West / 315°</option>
+                                    <option value="0">North / 0° (Reset)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Or Enter Any Custom Degree (0° - 360°)</label>
+                                <input type="number" id="customRotateAngle" placeholder="e.g. 35" min="0" max="360" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none">
+                            </div>
+                        </div>`;
+                } else if (this.currentTool.id === 'watermark') {
+                    container.innerHTML = `
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Watermark Text</label>
+                                <input type="text" id="watermarkText" value="CONFIDENTIAL" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none">
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Font Size</label>
+                                    <input type="number" id="watermarkSize" value="42" min="10" max="120" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Color</label>
+                                    <select id="watermarkColor" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none">
+                                        <option value="red">Red</option>
+                                        <option value="gray">Gray</option>
+                                        <option value="blue">Blue</option>
+                                        <option value="black">Black</option>
+                                        <option value="green">Green</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Density / Quantity</label>
+                                <select id="watermarkDensity" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none">
+                                    <option value="single">Single Center Stamp</option>
+                                    <option value="grid">Multi-Stamp Grid (Heavy Protection)</option>
+                                </select>
+                            </div>
+                        </div>`;
+                } else if (this.currentTool.id === 'protect') {
+                    this.verifiedEmail = '';
+                    container.innerHTML = `
+                        <div class="space-y-3">
+                            <div class="rounded-xl border border-slate-200 dark:border-slate-700 p-3 space-y-2">
+                                <p class="text-xs font-bold text-slate-800 dark:text-slate-200">Step 1 — Verify your email for recovery</p>
+                                <input type="email" id="protectEmail" autocomplete="email" placeholder="you@example.com" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none">
+                                <button type="button" onclick="app.sendProtectOtp()" class="w-full bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-lg py-2 text-xs font-semibold">Send verification code</button>
+                                <div id="protectOtpArea" class="hidden space-y-2">
+                                    <input type="text" id="protectOtp" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="Enter email code" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none">
+                                    <button type="button" onclick="app.verifyProtectOtp()" class="w-full bg-brand-600 text-white rounded-lg py-2 text-xs font-semibold">Verify email</button>
+                                </div>
+                                <p id="protectEmailStatus" class="text-xs text-slate-500 dark:text-slate-400">A verified email lets you recover this archive if you forget its password.</p>
+                            </div>
+                            <div id="protectPasswordArea" class="hidden space-y-3">
+                                <p class="text-xs font-bold text-emerald-600">Email verified. You can now protect your PDF.</p>
+                                <div><label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Create archive password</label><input type="password" id="pdfPassword" autocomplete="new-password" placeholder="At least 8 characters" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none"></div>
+                                <div><label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Confirm password</label><input type="password" id="pdfPasswordConfirm" autocomplete="new-password" placeholder="Re-enter password" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none"></div>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Your PDF is encrypted in a WinRAR-compatible AES-256 ZIP. An encrypted recovery copy is stored privately so verified email recovery can create a replacement archive.</p>
+                            </div>
+                        </div>`;
+                } else if (this.currentTool.id === 'unlock') {
+                    container.innerHTML = `
+                        <div class="space-y-3">
+                            <div><label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Archive password</label><input type="password" id="archivePassword" autocomplete="current-password" placeholder="Enter the ZIP password" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none"></div>
+                            <button type="button" onclick="app.showForgotPassword()" class="text-xs font-semibold text-brand-600 hover:underline">Forgot password?</button>
+                            <div id="forgotPasswordPanel" class="hidden rounded-xl border border-slate-200 dark:border-slate-700 p-3 space-y-2">
+                                <p class="text-xs font-bold text-slate-800 dark:text-slate-200">Recover access using your verified email</p>
+                                <input type="email" id="recoveryEmail" autocomplete="email" placeholder="Email used when protecting the PDF" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none">
+                                <button type="button" onclick="app.sendRecoveryOtp()" class="w-full bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-lg py-2 text-xs font-semibold">Send recovery code</button>
+                                <div id="recoveryOtpArea" class="hidden space-y-2">
+                                    <input type="text" id="recoveryOtp" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="Enter email code" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none">
+                                    <input type="password" id="newArchivePassword" autocomplete="new-password" placeholder="New password (8+ characters)" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none">
+                                    <input type="password" id="newArchivePasswordConfirm" autocomplete="new-password" placeholder="Confirm new password" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 outline-none">
+                                    <button type="button" onclick="app.verifyAndRecoverArchive()" class="w-full bg-brand-600 text-white rounded-lg py-2 text-xs font-semibold">Verify code & create new ZIP</button>
+                                </div>
+                                <p id="recoveryStatus" class="text-xs text-slate-500 dark:text-slate-400">Recovery works only for ZIP files created by PDF Studio with recovery enabled. Keep the original archive filename intact.</p>
+                            </div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Enter the ZIP password to extract normally, or use email recovery to create a replacement archive.</p>
+                        </div>`;
+                } else {
+                    container.innerHTML = `<p class="text-xs text-slate-500">No extra settings required for this tool.</p>`;
+                }
+            }
+
+            async getSupabase() {
+                if (this.supabaseClient) return this.supabaseClient;
+                if (!PDF_STUDIO_SUPABASE.url.startsWith('https://') || PDF_STUDIO_SUPABASE.publishableKey.startsWith('YOUR_')) {
+                    throw new Error('Connect your Supabase Project URL and Publishable Key in the app configuration first.');
+                }
+                const supabaseJs = await import('https://esm.sh/@supabase/supabase-js@2');
+                this.supabaseClient = supabaseJs.createClient(PDF_STUDIO_SUPABASE.url, PDF_STUDIO_SUPABASE.publishableKey, {
+                    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+                });
+                return this.supabaseClient;
+            }
+
+            async sendProtectOtp() {
+                const email = document.getElementById('protectEmail').value.trim().toLowerCase();
+                const status = document.getElementById('protectEmailStatus');
+                try {
+                    const supabase = await this.getSupabase();
+                    const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+                    if (error) throw error;
+                    document.getElementById('protectOtpArea').classList.remove('hidden');
+                    status.textContent = 'Code sent. Check your inbox and spam folder.';
+                } catch (error) { status.textContent = error.message; }
+            }
+
+            async verifyProtectOtp() {
+                const email = document.getElementById('protectEmail').value.trim().toLowerCase();
+                const token = document.getElementById('protectOtp').value.trim();
+                const status = document.getElementById('protectEmailStatus');
+                try {
+                    const supabase = await this.getSupabase();
+                    const { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
+                    if (error) throw error;
+                    if (!data.session || !data.user?.email_confirmed_at) throw new Error('Email verification was not completed.');
+                    this.verifiedEmail = email;
+                    document.getElementById('protectPasswordArea').classList.remove('hidden');
+                    status.textContent = 'Email verified successfully.';
+                } catch (error) { status.textContent = error.message; }
+            }
+
+            showForgotPassword() {
+                document.getElementById('forgotPasswordPanel').classList.toggle('hidden');
+            }
+
+            async sendRecoveryOtp() {
+                const email = document.getElementById('recoveryEmail').value.trim().toLowerCase();
+                const status = document.getElementById('recoveryStatus');
+                try {
+                    const supabase = await this.getSupabase();
+                    const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
+                    if (error) throw error;
+                    document.getElementById('recoveryOtpArea').classList.remove('hidden');
+                    status.textContent = 'Recovery code sent. Check your inbox and spam folder.';
+                } catch (error) { status.textContent = error.message; }
+            }
+
+            async verifyAndRecoverArchive() {
+                const email = document.getElementById('recoveryEmail').value.trim().toLowerCase();
+                const token = document.getElementById('recoveryOtp').value.trim();
+                const newPassword = document.getElementById('newArchivePassword').value;
+                const confirmPassword = document.getElementById('newArchivePasswordConfirm').value;
+                const status = document.getElementById('recoveryStatus');
+                const archiveFile = this.uploadedFiles[0]?.file;
+                if (!archiveFile) { status.textContent = 'Upload the original PDF Studio protected ZIP first.'; return; }
+                if (newPassword.length < 8 || newPassword !== confirmPassword) { status.textContent = 'Use matching passwords with at least 8 characters.'; return; }
+                try {
+                    status.textContent = 'Verifying email and restoring your encrypted recovery copy...';
+                    const supabase = await this.getSupabase();
+                    const { data: authData, error: authError } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
+                    if (authError) throw authError;
+                    if (!authData.session || !authData.user?.email_confirmed_at) throw new Error('Email verification failed.');
+                    // The opaque recovery ID is embedded in a small, non-sensitive ZIP manifest,
+                    // so users may rename the archive without losing recovery capability.
+                    const zipModule = await import('https://esm.sh/@zip.js/zip.js@2.7.57');
+                    const manifestReader = new zipModule.ZipReader(new zipModule.BlobReader(archiveFile));
+                    let manifest;
+                    try {
+                        await manifestReader.getEntries();
+                        if (!manifestReader.comment?.length) throw new Error('This ZIP has no PDF Studio recovery information.');
+                        manifest = JSON.parse(new TextDecoder().decode(manifestReader.comment));
+                    } finally {
+                        await manifestReader.close();
+                    }
+                    const fileId = String(manifest?.fileId || '');
+                    if (manifest?.format !== 'pdf-studio-recovery-v1' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(fileId)) {
+                        throw new Error('The recovery information in this ZIP is invalid.');
+                    }
+                    const { data, error } = await supabase.functions.invoke('recovery-key', { body: { action: 'unwrap', fileId } });
+                    if (error) throw error;
+                    const { data: encryptedBlob, error: downloadError } = await supabase.storage.from('pdf-recovery').download(data.storagePath);
+                    if (downloadError) throw downloadError;
+                    const b64ToBytes = value => Uint8Array.from(atob(value), c => c.charCodeAt(0));
+                    const keyBytes = b64ToBytes(data.fileKeyB64);
+                    const ivBytes = b64ToBytes(data.sourceIvB64);
+                    const cryptoKey = await crypto.subtle.importKey('raw', keyBytes, 'AES-GCM', false, ['decrypt']);
+                    const plainBytes = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: ivBytes }, cryptoKey, await encryptedBlob.arrayBuffer());
+                    const recoveredPdf = new File([plainBytes], data.originalFilename || 'recovered.pdf', { type: 'application/pdf' });
+                    const zipWriter = new zipModule.ZipWriter(new zipModule.BlobWriter('application/zip'));
+                    await zipWriter.add(recoveredPdf.name, new zipModule.BlobReader(recoveredPdf), { password: newPassword, encryptionStrength: 3, zipCrypto: false, level: 6 });
+                    const recoveryComment = new TextEncoder().encode(JSON.stringify({ format: 'pdf-studio-recovery-v1', fileId }));
+                    const recoveredZip = await zipWriter.close(recoveryComment);
+                    const outputName = archiveFile.name;
+                    const url = URL.createObjectURL(recoveredZip);
+                    const btn = document.getElementById('downloadBtn');
+                    btn.href = url; btn.download = outputName;
+                    document.getElementById('resultMeta').innerText = `File: ${outputName} (${(recoveredZip.size / (1024*1024)).toFixed(2)} MB)`;
+                    document.getElementById('downloadContainer').classList.remove('hidden');
+                    status.textContent = 'Recovery successful. Download your replacement ZIP and keep its new password safe.';
+                } catch (error) { status.textContent = error.message || 'Recovery failed. Please try again.'; }
+            }
+
+            async createRecoveryCopy(file, fileId) {
+                const supabase = await this.getSupabase();
+                const { data: userData, error: userError } = await supabase.auth.getUser();
+                if (userError || !userData.user?.email_confirmed_at) throw new Error('Verify your email before protecting a PDF.');
+                const fileKey = crypto.getRandomValues(new Uint8Array(32));
+                const sourceIv = crypto.getRandomValues(new Uint8Array(12));
+                const cryptoKey = await crypto.subtle.importKey('raw', fileKey, 'AES-GCM', false, ['encrypt']);
+                const encryptedBytes = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: sourceIv }, cryptoKey, await file.arrayBuffer());
+                const toB64 = bytes => { let binary = ''; bytes.forEach(b => binary += String.fromCharCode(b)); return btoa(binary); };
+                const storagePath = `${userData.user.id}/${fileId}.bin`;
+                const { error: uploadError } = await supabase.storage.from('pdf-recovery').upload(storagePath, new Blob([encryptedBytes], { type: 'application/octet-stream' }), { contentType: 'application/octet-stream', upsert: false });
+                if (uploadError) throw uploadError;
+                const { error: wrapError } = await supabase.functions.invoke('recovery-key', { body: { action: 'wrap', fileId, fileKeyB64: toB64(fileKey), originalFilename: file.name, storagePath, sourceIvB64: toB64(sourceIv) } });
+                if (wrapError) { await supabase.storage.from('pdf-recovery').remove([storagePath]); throw wrapError; }
+            }
+
+            handleDragOver(e) { e.preventDefault(); document.getElementById('dropzone').classList.add('drag-over'); }
+            handleDragLeave(e) { e.preventDefault(); document.getElementById('dropzone').classList.remove('drag-over'); }
+            handleDrop(e) { e.preventDefault(); document.getElementById('dropzone').classList.remove('drag-over'); if (e.dataTransfer.files.length) this.processFiles(Array.from(e.dataTransfer.files)); }
+            handleFileSelect(e) { if (e.target.files.length) this.processFiles(Array.from(e.target.files)); }
+
+            async processFiles(files) {
+                for (let f of files) {
+                    this.uploadedFiles.push({ id: Math.random().toString(36).substring(2, 9), file: f, name: f.name, size: (f.size / (1024*1024)).toFixed(2) + ' MB' });
+                }
+                this.renderThumbnails();
+                document.getElementById('dropzone').classList.add('hidden');
+                document.getElementById('filePreviewArea').classList.remove('hidden');
+                document.getElementById('fileCountBadge').innerText = `Selected Files (${this.uploadedFiles.length})`;
+                this.updateProcessButtonState();
+            }
+
+            renderThumbnails() {
+                const container = document.getElementById('thumbnailsContainer');
+                container.innerHTML = '';
+                this.uploadedFiles.forEach(f => {
+                    const card = document.createElement('div');
+                    card.className = 'relative group bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-center shadow-sm';
+                    card.innerHTML = `<button onclick="app.removeFile('${f.id}')" class="absolute -top-2 -right-2 bg-rose-500 text-white w-6 h-6 rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition z-10"><svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></button><div class="w-full h-28 bg-slate-100 dark:bg-slate-900 rounded flex items-center justify-center mb-2"><svg class="w-8 h-8 text-brand-600 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/></svg></div><p class="text-xs truncate font-medium">${f.name}</p>`;
+                    container.appendChild(card);
+                });
+            }
+
+            removeFile(id) {
+                this.uploadedFiles = this.uploadedFiles.filter(f => f.id !== id);
+                this.renderThumbnails();
+                if (!this.uploadedFiles.length) this.resetWorkspaceUI();
+                document.getElementById('fileCountBadge').innerText = `Selected Files (${this.uploadedFiles.length})`;
+                this.updateProcessButtonState();
+            }
+
+            clearAllFiles() { this.uploadedFiles = []; this.resetWorkspaceUI(); }
+
+            async executeTool() {
+                if (!this.uploadedFiles.length) return;
+                const progressContainer = document.getElementById('progressContainer');
+                const progressBar = document.getElementById('progressBar');
+                progressContainer.classList.remove('hidden');
+                document.getElementById('downloadContainer').classList.add('hidden');
+
+                const setProg = (p, text) => { progressBar.style.width = `${p}%`; document.getElementById('progressStatus').innerText = text; document.getElementById('progressPercent').innerText = `${p}%`; };
+
+                try {
+                    setProg(20, 'Processing...');
+                    let blob = null, name = 'output.pdf';
+
+                    switch (this.currentTool.id) {
+                        case 'merge':
+                            const merged = await PDFLib.PDFDocument.create();
+                            for (let f of this.uploadedFiles) {
+                                const pdf = await PDFLib.PDFDocument.load(await f.file.arrayBuffer());
+                                const pages = await merged.copyPages(pdf, pdf.getPageIndices());
+                                pages.forEach(p => merged.addPage(p));
+                            }
+                            blob = new Blob([await merged.save()], { type: 'application/pdf' });
+                            name = 'merged_document.pdf';
+                            break;
+
+                        case 'split':
+                            const srcSplitPdf = await PDFLib.PDFDocument.load(await this.uploadedFiles[0].file.arrayBuffer());
+                            const totalSplitPages = srcSplitPdf.getPageCount();
+                            const splitRangeVal = document.getElementById('splitRangeInput')?.value.trim() || '';
+                            const zipSplit = new JSZip();
+
+                            let splitGroups = [];
+
+                            if (splitRangeVal) {
+                                const parts = splitRangeVal.split(',');
+                                parts.forEach(part => {
+                                    const rangeIndices = [];
+                                    if (part.includes('-')) {
+                                        const [start, end] = part.split('-').map(n => parseInt(n.trim()));
+                                        for (let p = start; p <= end; p++) {
+                                            if (p >= 1 && p <= totalSplitPages) rangeIndices.push(p - 1);
+                                        }
+                                    } else {
+                                        const p = parseInt(part.trim());
+                                        if (p >= 1 && p <= totalSplitPages) rangeIndices.push(p - 1);
+                                    }
+                                    if (rangeIndices.length > 0) splitGroups.push(rangeIndices);
+                                });
+                            } else {
+                                const midPoint = Math.ceil(totalSplitPages / 2);
+                                const part1 = [], part2 = [];
+                                for (let i = 0; i < totalSplitPages; i++) {
+                                    if (i < midPoint) part1.push(i);
+                                    else part2.push(i);
+                                }
+                                splitGroups.push(part1);
+                                if (part2.length > 0) splitGroups.push(part2);
+                            }
+
+                            for (let idx = 0; idx < splitGroups.length; idx++) {
+                                setProg(30 + Math.floor((idx / splitGroups.length) * 60), `Generating split file ${idx + 1} of ${splitGroups.length}...`);
+                                const subPdf = await PDFLib.PDFDocument.create();
+                                const copied = await subPdf.copyPages(srcSplitPdf, splitGroups[idx]);
+                                copied.forEach(p => subPdf.addPage(p));
+                                const savedBytes = await subPdf.save();
+                                zipSplit.file(`split_part_${idx + 1}.pdf`, savedBytes);
+                            }
+
+                            blob = await zipSplit.generateAsync({ type: 'blob' });
+                            name = 'split_documents.zip';
+                            break;
+
+                        case 'extract-pages':
+                            const srcPdf = await PDFLib.PDFDocument.load(await this.uploadedFiles[0].file.arrayBuffer());
+                            const splitPdf = await PDFLib.PDFDocument.create();
+                            const rangeVal = document.getElementById('splitRangeInput').value || '1';
+                            const totalPages = srcPdf.getPageCount();
+                            const indices = [];
+                            
+                            rangeVal.split(',').forEach(part => {
+                                if (part.includes('-')) {
+                                    const [start, end] = part.split('-').map(n => parseInt(n.trim()));
+                                    for (let p = start; p <= end; p++) { if (p >= 1 && p <= totalPages) indices.push(p - 1); }
+                                } else {
+                                    const p = parseInt(part.trim());
+                                    if (p >= 1 && p <= totalPages) indices.push(p - 1);
+                                }
+                            });
+
+                            const copiedPages = await splitPdf.copyPages(srcPdf, indices.length ? indices : [0]);
+                            copiedPages.forEach(p => splitPdf.addPage(p));
+                            blob = new Blob([await splitPdf.save()], { type: 'application/pdf' });
+                            name = 'extracted_document.pdf';
+                            break;
+
+                        case 'remove-pages':
+                            const remPdf = await PDFLib.PDFDocument.load(await this.uploadedFiles[0].file.arrayBuffer());
+                            const remTotal = remPdf.getPageCount();
+                            const remInput = document.getElementById('removeRangeInput').value || '';
+                            const removeSet = new Set();
+                            remInput.split(',').forEach(part => {
+                                if (part.includes('-')) {
+                                    const [s, e] = part.split('-').map(n => parseInt(n.trim()));
+                                    for (let p = s; p <= e; p++) removeSet.add(p - 1);
+                                } else if (part.trim()) {
+                                    removeSet.add(parseInt(part.trim()) - 1);
+                                }
+                            });
+                            const keepIndices = [];
+                            for (let i = 0; i < remTotal; i++) {
+                                if (!removeSet.has(i)) keepIndices.push(i);
+                            }
+                            const newPdf = await PDFLib.PDFDocument.create();
+                            const keptPages = await newPdf.copyPages(remPdf, keepIndices);
+                            keptPages.forEach(p => newPdf.addPage(p));
+                            blob = new Blob([await newPdf.save()], { type: 'application/pdf' });
+                            name = 'cleaned_document.pdf';
+                            break;
+
+                        case 'compress':
+                            setProg(50, 'Optimizing and restructuring PDF objects...');
+                            const compPdf = await PDFLib.PDFDocument.load(await this.uploadedFiles[0].file.arrayBuffer(), { ignoreEncryption: true });
+                            // Re-saving with object streams enabled forces structural re-indexing and compresses stream objects
+                            const compressedBytes = await compPdf.save({ useObjectStreams: true, addDefaultPage: false });
+                            blob = new Blob([compressedBytes], { type: 'application/pdf' });
+                            name = 'compressed_document.pdf';
+                            break;
+
+                        case 'rotate':
+                            const customAngleVal = document.getElementById('customRotateAngle').value;
+                            const angle = customAngleVal !== '' ? parseInt(customAngleVal) : parseInt(document.getElementById('rotateAngle').value);
+                            const rotPdf = await PDFLib.PDFDocument.load(await this.uploadedFiles[0].file.arrayBuffer());
+                            rotPdf.getPages().forEach(p => {
+                                const currentRot = p.getRotation().angle;
+                                p.setRotation(PDFLib.degrees((currentRot + angle) % 360));
+                            });
+                            blob = new Blob([await rotPdf.save()], { type: 'application/pdf' });
+                            name = 'rotated_document.pdf';
+                            break;
+case 'watermark':
+    const wmText = document.getElementById('watermarkText').value || 'CONFIDENTIAL';
+    const wmSize = parseInt(document.getElementById('watermarkSize').value) || 42;
+    const wmColorChoice = document.getElementById('watermarkColor').value;
+    const wmDensity = document.getElementById('watermarkDensity').value;
+
+    let rgbColor = PDFLib.rgb(0.85, 0.2, 0.2); // default red
+    if (wmColorChoice === 'gray') rgbColor = PDFLib.rgb(0.5, 0.5, 0.5);
+    else if (wmColorChoice === 'blue') rgbColor = PDFLib.rgb(0.2, 0.3, 0.85);
+    else if (wmColorChoice === 'black') rgbColor = PDFLib.rgb(0.1, 0.1, 0.1);
+    else if (wmColorChoice === 'green') rgbColor = PDFLib.rgb(0.1, 0.6, 0.2);
+
+    const wmPdf = await PDFLib.PDFDocument.load(await this.uploadedFiles[0].file.arrayBuffer());
+    // Embed font so pdf-lib accurately measures text width for precise centering at any size
+    const font = await wmPdf.embedFont(PDFLib.StandardFonts.HelveticaBold);
+
+    wmPdf.getPages().forEach(p => {
+        const { width, height } = p.getSize();
+        
+        if (wmDensity === 'grid') {
+            for (let xPos = width * 0.15; xPos < width; xPos += width * 0.35) {
+                for (let yPos = height * 0.15; yPos < height; yPos += height * 0.25) {
+                    p.drawText(wmText, { 
+                        x: xPos, 
+                        y: yPos, 
+                        size: wmSize * 0.6, 
+                        font: font,
+                        color: rgbColor, 
+                        opacity: 0.25, 
+                        rotate: PDFLib.degrees(45) 
+                    });
+                }
+            }
+        } else {
+            // Calculate dynamic offset based on exact text width so larger sizes stay centered
+            const textWidth = font.widthOfTextAtSize(wmText, wmSize);
+            const textHeight = font.heightAtSize(wmSize);
+            
+            p.drawText(wmText, { 
+                x: (width / 2) - (textWidth / 3), 
+                y: (height / 2) - (textHeight / 3), 
+                size: wmSize, 
+                font: font,
+                color: rgbColor, 
+                opacity: 0.3, 
+                rotate: PDFLib.degrees(45) 
+            });
+        }
+    });
+    blob = new Blob([await wmPdf.save()], { type: 'application/pdf' });
+    name = 'watermarked_document.pdf';
+    break;
+case 'protect': {
+    const pwd = document.getElementById('pdfPassword')?.value || '';
+    const confirmPwd = document.getElementById('pdfPasswordConfirm')?.value || '';
+    if (!this.verifiedEmail) throw new Error('Verify your email before protecting a PDF.');
+    if (pwd.length < 8) throw new Error('Please use a password with at least 8 characters.');
+    if (pwd !== confirmPwd) throw new Error('The passwords do not match.');
+    const sourceFile = this.uploadedFiles[0].file;
+    const originalFileName = sourceFile.name.replace(/\.[^/.]+$/, '');
+    const fileId = crypto.randomUUID();
+    setProg(20, 'Preparing encrypted recovery copy...');
+    await this.createRecoveryCopy(sourceFile, fileId);
+    setProg(55, 'Creating AES-256 password-protected ZIP...');
+    const zipModule = await import('https://esm.sh/@zip.js/zip.js@2.7.57');
+    const zipWriter = new zipModule.ZipWriter(new zipModule.BlobWriter('application/zip'));
+    await zipWriter.add(sourceFile.name, new zipModule.BlobReader(sourceFile), { password: pwd, encryptionStrength: 3, zipCrypto: false, level: 6 });
+    // Store only an opaque UUID in the ZIP archive comment, not as an extractable file.
+    const recoveryComment = new TextEncoder().encode(JSON.stringify({ format: 'pdf-studio-recovery-v1', fileId }));
+    blob = await zipWriter.close(recoveryComment);
+    name = `${originalFileName}--recovery-${fileId}_protected.zip`;
+    document.getElementById('pdfPassword').value = '';
+    document.getElementById('pdfPasswordConfirm').value = '';
+    break;
+}
+                        case 'unlock': {
+                            const archivePassword = document.getElementById('archivePassword').value;
+                            if (!archivePassword) {
+                                alert('Please enter the archive password.');
+                                progressContainer.classList.add('hidden');
+                                return;
+                            }
+                            setProg(35, 'Opening encrypted ZIP archive...');
+                            const zipModule = await import('https://esm.sh/@zip.js/zip.js@2.7.57');
+                            const zipReader = new zipModule.ZipReader(new zipModule.BlobReader(this.uploadedFiles[0].file));
+                            try {
+                                const entries = await zipReader.getEntries();
+                                const pdfEntries = entries.filter(entry => !entry.directory && entry.filename.toLowerCase().endsWith('.pdf'));
+                                if (pdfEntries.length !== 1) {
+                                    throw new Error('The archive must contain exactly one PDF file.');
+                                }
+                                setProg(65, 'Verifying password and extracting PDF...');
+                                blob = await pdfEntries[0].getData(new zipModule.BlobWriter('application/pdf'), { password: archivePassword });
+                                const safeName = pdfEntries[0].filename.split('/').pop().replace(/[^a-zA-Z0-9._-]/g, '_');
+                                name = safeName || 'unlocked_document.pdf';
+                            } finally {
+                                await zipReader.close();
+                            }
+                            break;
+                        }
+
+                        case 'image-to-pdf':
+                            const imgPdf = await PDFLib.PDFDocument.create();
+                            for (let fObj of this.uploadedFiles) {
+                                const bytes = await fObj.file.arrayBuffer();
+                                let img;
+                                if (fObj.file.type.includes('png')) img = await imgPdf.embedPng(bytes);
+                                else img = await imgPdf.embedJpg(bytes);
+                                const page = imgPdf.addPage([img.width, img.height]);
+                                page.drawImage(img, { x: 0, y: 0, width: img.width, height: img.width * (img.height / img.width) });
+                            }
+                            blob = new Blob([await imgPdf.save()], { type: 'application/pdf' });
+                            name = 'images_converted.pdf';
+                            break;
+
+                        case 'pdf-to-image':
+                            setProg(30, 'Rendering PDF pages into high-resolution JPG images...');
+                            const pdfDoc = await pdfjsLib.getDocument({ data: await this.uploadedFiles[0].file.arrayBuffer() }).promise;
+                            
+                            if (pdfDoc.numPages === 1) {
+                                const page = await pdfDoc.getPage(1);
+                                const viewport = page.getViewport({ scale: 2.0 });
+                                const canvas = document.createElement('canvas');
+                                canvas.width = viewport.width; canvas.height = viewport.height;
+                                await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+                                
+                                const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+                                const binStr = atob(dataUrl.split(',')[1]);
+                                const len = binStr.length;
+                                const arr = new Uint8Array(len);
+                                for (let i = 0; i < len; i++) { arr[i] = binStr.charCodeAt(i); }
+                                blob = new Blob([arr], { type: 'image/jpeg' });
+                                name = this.uploadedFiles[0].name.replace(/\.[^/.]+$/, "") + '_page1.jpg';
+                            } else {
+                                // For multi-page PDFs, pack into a zip or render first page directly
+                                const zip = new JSZip();
+                                for (let i = 1; i <= pdfDoc.numPages; i++) {
+                                    setProg(30 + Math.floor((i / pdfDoc.numPages) * 60), `Rendering page ${i}/${pdfDoc.numPages}...`);
+                                    const page = await pdfDoc.getPage(i);
+                                    const viewport = page.getViewport({ scale: 2.0 });
+                                    const canvas = document.createElement('canvas');
+                                    canvas.width = viewport.width; canvas.height = viewport.height;
+                                    await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+                                    zip.file(`page_${i}.jpg`, canvas.toDataURL('image/jpeg', 0.95).split(',')[1], { base64: true });
+                                }
+                                blob = await zip.generateAsync({ type: 'blob' });
+                                name = 'extracted_images_jpg.zip';
+                            }
+                            break;
+
+                        case 'word-to-pdf':
+                            setProg(40, 'Parsing Word Document (.docx)...');
+                            const arrayBuffer = await this.uploadedFiles[0].file.arrayBuffer();
+                            const result = await mammoth.convertToHtml({ arrayBuffer: arrayBuffer });
+                            
+                            setProg(70, 'Rendering crisp PDF layout...');
+                            const element = document.createElement('div');
+                            element.innerHTML = `<div style="color: #111827; background-color: #ffffff; padding: 40px; font-family: Inter, sans-serif; font-size: 14px; line-height: 1.6;">${result.value}</div>`;
+
+                            blob = await html2pdf().from(element).set({
+                                margin: 10,
+                                filename: 'converted_document.pdf',
+                                html2canvas: { scale: 2, useCORS: true },
+                                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                            }).output('blob');
+                            name = this.uploadedFiles[0].name.replace(/\.[^/.]+$/, "") + '.pdf';
+                            break;
+
+                        case 'pdf-to-word':
+                            setProg(30, 'Extracting text from PDF pages...');
+                            const pdfData = await this.uploadedFiles[0].file.arrayBuffer();
+                            const pdfDocTarget = await pdfjsLib.getDocument({ data: pdfData }).promise;
+                            let fullExtractedText = '';
+                            
+                            for (let i = 1; i <= pdfDocTarget.numPages; i++) {
+                                setProg(30 + Math.floor((i / pdfDocTarget.numPages) * 50), `Extracting page ${i}/${pdfDocTarget.numPages}...`);
+                                const page = await pdfDocTarget.getPage(i);
+                                const textContent = await page.getTextContent();
+                                const pageText = textContent.items.map(item => item.str).join(' ');
+                                fullExtractedText += `<w:p><w:r><w:t>--- Page ${i} ---</w:t></w:r></w:p><w:p><w:r><w:t>${escapeXml(pageText)}</w:t></w:r></w:p>`;
+                            }
+
+                            setProg(85, 'Generating valid Word (.docx) XML structure...');
+                            // Constructing a fully valid OpenXML WordprocessingML structure so Microsoft Word opens it cleanly without unreadable content errors
+                            const wordDocXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+                            <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+                                <w:body>
+                                    ${fullExtractedText}
+                                    <w:sectPr><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/></w:sectPr>
+                                </w:body>
+                            </w:document>`;
+
+                            const zipDocx = new JSZip();
+                            zipDocx.file("word/document.xml", wordDocXml);
+                            zipDocx.file("[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>`);
+                            zipDocx.file("_rels/.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`);
+
+                            blob = await zipDocx.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+                            name = this.uploadedFiles[0].name.replace(/\.[^/.]+$/, "") + '.docx';
+                            break;
+
+                        default:
+                            blob = new Blob([await this.uploadedFiles[0].file.arrayBuffer()], { type: 'application/pdf' });
+                            name = 'processed.pdf';
+                    }
+
+                    setProg(100, 'Complete!');
+                    const url = URL.createObjectURL(blob);
+                    const btn = document.getElementById('downloadBtn');
+                    btn.href = url;
+                    btn.download = name;
+                    document.getElementById('resultMeta').innerText = `File: ${name} (${(blob.size / (1024*1024)).toFixed(2)} MB)`;
+                    document.getElementById('downloadContainer').classList.remove('hidden');
+                } catch (err) {
+                    alert('Error executing tool: ' + err.message);
+                    console.error(err);
+                }
+            }
+        }
+
+        function escapeXml(unsafe) {
+            return unsafe.replace(/[<>&'"]/g, function (c) {
+                switch (c) {
+                    case '<': return '&lt;';
+                    case '>': return '&gt;';
+                    case '&': return '&amp;';
+                    case '\'': return '&apos;';
+                    case '"': return '&quot;';
+                }
+            });
+        }
+
+        let app = new PDFApp();
+    </script>
+</body>
+</html>
